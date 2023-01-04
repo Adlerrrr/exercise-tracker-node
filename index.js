@@ -51,3 +51,14 @@ app.post('/api/users', bodyParser.urlencoded({ extended: false }), (req, res) =>
     }
   })
 });
+
+
+/* Getting all Users in array */
+
+app.get('/api/users', (req, res) => {
+  User.find({}, (err, arrayOfUsers)=>{
+    if(!err){
+      res.json(arrayOfUsers)
+    }
+  })
+});
