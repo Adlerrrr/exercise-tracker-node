@@ -17,12 +17,8 @@ mongoose
   })
   .catch((err) => console.log(err))
 mongoose.connect(process.env.MONGO_URI, { useNewUrlParser: true, useUnifiedTopology: true });
-const userSchema = {
-  username: String,
-};
-
-const User = mongoose.model("User", userSchema);
-
+const User = require('./model/Users');
+const Exercise = require('./model/Exercises');
 
 //pre middleware
 app.use(cors())
@@ -56,9 +52,36 @@ app.post('/api/users', bodyParser.urlencoded({ extended: false }), (req, res) =>
 /* Getting all Users in array */
 
 app.get('/api/users', (req, res) => {
-  User.find({}, (err, arrayOfUsers)=>{
-    if(!err){
+  User.find({}, (err, arrayOfUsers) => {
+    if (!err) {
       res.json(arrayOfUsers)
     }
   })
 });
+
+/* 
+Failed:You can POST to /api/users/:_id/exercises with form data description, duration, and optionally date. If no date is supplied, 
+the current date will be used. */
+app.post('/api/users/:_id/exercises', (req, res) => {
+  let currentDate = new Date().toJSON().slice(0, 10);
+  let date;
+  if (req.body.date === '') {
+    date = currentDate;
+  } else {
+    date = req.body.date
+  };
+  let newExercise = new Exercise({
+    description: req.body.description,
+    duration: req.body.duration,
+    date: date
+  })
+  newExercise.save((err, result) => {
+    if (!err) {
+      res.json({
+        description: req.body.description,
+        duration: req.body.duration,
+        date: date
+      })
+    }
+  })
+})
