@@ -63,7 +63,8 @@ app.get('/api/users', (req, res) => {
 Failed:You can POST to /api/users/:_id/exercises with form data description, duration, and optionally date. If no date is supplied, 
 the current date will be used. */
 app.post('/api/users/:_id/exercises', (req, res) => {
-  let currentDate = new Date().toJSON().slice(0, 10);
+  /* let currentDate = new Date().toJSON().slice(0, 10); */
+  let currentDate = new Date().toDateString();
   let date;
   if (req.body.date === '') {
     date = currentDate;
@@ -74,13 +75,23 @@ app.post('/api/users/:_id/exercises', (req, res) => {
     description: req.body.description,
     duration: req.body.duration,
     date: date
+  });
+
+  User.findById(req.params['_id'],(err, data) =>{
+    if (err || !data){
+      console.log(err)
+    }else{
+      usernameFound = data.username
+    }
   })
   newExercise.save((err, result) => {
     if (!err) {
       res.json({
+        _id: req.params['_id'],
+        username: usernameFound,
+        date: date,
+        duration: parseInt(req.body.duration),
         description: req.body.description,
-        duration: req.body.duration,
-        date: date
       })
     }
   })
