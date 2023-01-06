@@ -17,8 +17,7 @@ mongoose
   })
   .catch((err) => console.log(err))
 mongoose.connect(process.env.MONGO_URI, { useNewUrlParser: true, useUnifiedTopology: true });
-const User = require('./model/Users');
-const Exercise = require('./model/Exercises');
+const Log = require('./model/Log');
 
 //pre middleware
 app.use(cors())
@@ -36,63 +35,64 @@ app.use(bodyParser.urlencoded({
 
 //api functions
 /* Creating Users */
-app.post('/api/users', bodyParser.urlencoded({ extended: false }), (req, res) => {
-  let newUser = new User({ username: req.body.username })
-  newUser.save((err, data) => {
-    if (!err) {
-      let resObj = {};
-      resObj['username'] = data.username;
-      resObj['_id'] = data.id;
-      res.json(resObj)
-    }
+app.post("/api/users", (req, res) => {
+  const newLog = new Log({
+    username: req.body.username,
+    count: 0,
+    log: [],
+    since: new Date().toDateString()
   })
+  newLog.save((err, data) => {
+    // if (err) return console.error(err);
+    return res.json({
+      username: newLog.username,
+      _id: newLog["_id"]
+    });
+  });
 });
 
 
 /* Getting all Users in array */
 
 app.get('/api/users', (req, res) => {
-  User.find({}, (err, arrayOfUsers) => {
+  Log.find({}, (err, arrayOfUsers) => {
     if (!err) {
       res.json(arrayOfUsers)
     }
   })
 });
 
-/* 
-Failed:You can POST to /api/users/:_id/exercises with form data description, duration, and optionally date. If no date is supplied, 
+/*
+Failed:You can POST to /api/users/:_id/exercises with form data description, duration, and optionally date. If no date is supplied,
 the current date will be used. */
 app.post('/api/users/:_id/exercises', (req, res) => {
-  /* let currentDate = new Date().toJSON().slice(0, 10); */
-  let currentDate = new Date().toDateString();
-  let date;
-  if (req.body.date === '') {
-    date = currentDate;
-  } else {
-    date = req.body.date
-  };
-  let newExercise = new Exercise({
-    description: req.body.description,
-    duration: req.body.duration,
-    date: date
-  });
-
-  User.findById(req.params['_id'],(err, data) =>{
-    if (err || !data){
+  Log.findById(req.body[':_id'],(err, data) =>{
+    if (err) {
       console.log(err)
     }else{
-      usernameFound = data.username
+      res.json(data)
+      // let newLog = new Log({
+      //   username: data.username,
+      //   description: req.body.description,
+      //   duration: Number(req.body.duration),
+      //   date: req.body.date,
+      // });
+      // console.log(newLog.username)
     }
+    // newLog.save((err, result) => {
+    //   if (err) {
+    //     console.log(err)
+    //   } else {
+    //     console.log(date.username)
+        // return res.json({
+        //   username: data.username,
+        //   _id: req.body[':_id'],
+        //   description: newLog.description,
+        //   duration: newLog.duration,
+        //   date: newLog.date
+        // })
+    //   }
+    // })
   })
-  newExercise.save((err, result) => {
-    if (!err) {
-      res.json({
-        _id: req.params['_id'],
-        username: usernameFound,
-        date: date,
-        duration: parseInt(req.body.duration),
-        description: req.body.description,
-      })
-    }
-  })
+
 })
