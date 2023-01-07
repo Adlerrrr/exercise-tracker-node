@@ -4,12 +4,12 @@ const mongoose = require('mongoose')
 const logSchema = {
     // by default, an _id will be added by Mongoose
     username: { type: String, required: true },
-    count: { type: Number, required: true},
-    log: [{
+    count: { type: Number},
+    log: {
       description: String,
       duration: Number,
-      date: String
-    }]
+      date: Date
+    }
   }
   
 const Log = mongoose.model("Log", logSchema);
