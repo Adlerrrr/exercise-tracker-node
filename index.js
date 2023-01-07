@@ -65,8 +65,8 @@ app.get('/api/users', (req, res) => {
 /*
 Failed:You can POST to /api/users/:_id/exercises with form data description, duration, and optionally date. If no date is supplied,
 the current date will be used. */
-app.post('/api/users/:_id/exercises', (req, res) => {
-  Log.findById(req.params._id, (err, data) => {
+app.post('/api/users/:_id/exercises', async (req, res) => {
+  Log.findById(req.params._id, async (err, data) => {
     let newLog;
     let foundUser = data.username;
     if (err) {
@@ -83,19 +83,30 @@ app.post('/api/users/:_id/exercises', (req, res) => {
           date: req.body.date ? new Date(req.body.date).toDateString() : new Date().toDateString()
         }
       });
-      newLog.save((err, result) => {
-        if (err) {
-          console.log(err)
-        } else {
-          return res.json({
-            _id: data._id,
-            username: foundUser,
-            date: newLog.log.date.toDateString(),
-            duration: Number(newLog.log.duration),
-            description: newLog.log.description
-          })
-        }
-      });
+      // newLog.save((err, result) => {
+      //   if (err) {
+      //     console.log(err)
+      //   } else {
+      //     return res.json({
+      //       _id: data._id,
+      //       username: foundUser,
+      //       date: newLog.log.date.toDateString(),
+      //       duration: Number(newLog.log.duration),
+      //       description: newLog.log.description
+      //     })
+      //   }
+      // });
+      const resp = await Log.findByIdAndUpdate({ _id: req.params._id });
+
+      resp.log = newLog.log;
+      resp.save();
+      res.json({
+        _id: data._id,
+        username: foundUser,
+        date: newLog.log.date.toDateString(),
+        duration: Number(newLog.log.duration),
+        description: newLog.log.description
+      })
     }
   })
 })
