@@ -83,19 +83,7 @@ app.post('/api/users/:_id/exercises', async (req, res) => {
           date: req.body.date ? new Date(req.body.date).toDateString() : new Date().toDateString()
         }
       });
-      // newLog.save((err, result) => {
-      //   if (err) {
-      //     console.log(err)
-      //   } else {
-      //     return res.json({
-      //       _id: data._id,
-      //       username: foundUser,
-      //       date: newLog.log.date.toDateString(),
-      //       duration: Number(newLog.log.duration),
-      //       description: newLog.log.description
-      //     })
-      //   }
-      // });
+
       const resp = await Log.findByIdAndUpdate({ _id: req.params._id });
 
       resp.log = newLog.log;
@@ -107,6 +95,14 @@ app.post('/api/users/:_id/exercises', async (req, res) => {
         duration: Number(newLog.log.duration),
         description: newLog.log.description
       })
+    }
+  })
+})
+
+app.get('/api/users/:_id/logs', (req, res) => {
+  Log.findById(req.params._id, (err, userLog) => {
+    if (!err) {
+      res.json(userLog)
     }
   })
 })
