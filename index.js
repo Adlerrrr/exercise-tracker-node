@@ -77,23 +77,27 @@ app.post('/api/users/:_id/exercises', async (req, res) => {
     } else {
       newLog = new Log({
         username: foundUser,
-        log: {
+        log: [{
           description: req.body.description,
           duration: Number(req.body.duration),
           date: req.body.date ? new Date(req.body.date).toDateString() : new Date().toDateString()
-        }
+        }]
       });
 
-      const resp = await Log.findByIdAndUpdate({ _id: req.params._id });
+      const resp = await Log.findByIdAndUpdate({ _id: mongoose.Types.ObjectId(req.params._id) });
 
-      resp.log = newLog.log;
+      resp.log.push(newLog.log);
+      // console.log(newLog.log[0]);
+      // console.log(typeof newLog.log);
+      console.log(1234)
+      console.log(newLog.log[0].date)
       resp.save();
       res.json({
         _id: data._id,
         username: foundUser,
-        date: newLog.log.date.toDateString(),
-        duration: Number(newLog.log.duration),
-        description: newLog.log.description
+        date: newLog.log[0].date,
+        duration: Number(newLog.log[0].duration),
+        description: newLog.log[0].description
       })
     }
   })
