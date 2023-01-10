@@ -67,7 +67,6 @@ Failed:You can POST to /api/users/:_id/exercises with form data description, dur
 the current date will be used. */
 app.post('/api/users/:_id/exercises', async (req, res) => {
   Log.findById(req.params._id, async (err, data) => {
-    let newLog;
     let foundUser = data.username;
     if (err) {
       console.log(err)
@@ -75,38 +74,43 @@ app.post('/api/users/:_id/exercises', async (req, res) => {
       console.log(err)
 
     } else {
-      newLog = new Log({
-        username: foundUser,
-        log: [{
-          description: req.body.description,
-          duration: Number(req.body.duration),
-          date: req.body.date ? new Date(req.body.date).toDateString() : new Date().toDateString()
-        }]
-      });
+      const logObj = {
+        description: req.body.description,
+        duration: Number(req.body.duration),
+        date: req.body.date ? new Date(req.body.date).toDateString() : new Date().toDateString()
+      }
 
-      const resp = await Log.findByIdAndUpdate({ _id: mongoose.Types.ObjectId(req.params._id) });
+      const resp = await Log.findByIdAndUpdate({ _id: req.params._id }, { $push: { log: logObj } });
 
-      resp.log.push(newLog.log);
-      // console.log(newLog.log[0]);
-      // console.log(typeof newLog.log);
-      console.log(1234)
-      console.log(newLog.log[0].date)
       resp.save();
       res.json({
         _id: data._id,
         username: foundUser,
-        date: newLog.log[0].date,
-        duration: Number(newLog.log[0].duration),
-        description: newLog.log[0].description
+        date: logObj.date,
+        duration: logObj.duration,
+        description: logObj.description
       })
     }
   })
 })
 
+
 app.get('/api/users/:_id/logs', (req, res) => {
   Log.findById(req.params._id, (err, userLog) => {
     if (!err) {
-      res.json(userLog)
+      let logs = userLog.log.map(x => {
+        return {
+          description: x.description,
+          duration: x.duration,
+          date: x.date
+        }
+      })
+
+      res.json({
+        _id: userLog._id,
+        username: userLog.username,
+        log: logs,
+      })
     }
   })
 })
