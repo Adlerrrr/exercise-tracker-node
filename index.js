@@ -102,7 +102,7 @@ app.get('/api/users/:_id/logs', (req, res) => {
         return {
           description: x.description,
           duration: x.duration,
-          date: x.date
+          date: x.date.toDateString()
         }
       })
 
