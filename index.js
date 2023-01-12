@@ -95,23 +95,76 @@ app.post('/api/users/:_id/exercises', async (req, res) => {
 })
 
 
-app.get('/api/users/:_id/logs', (req, res) => {
-  Log.findById(req.params._id, (err, userLog) => {
-    if (!err) {
-      let logs = userLog.log.map(x => {
-        return {
-          description: x.description,
-          duration: x.duration,
-          date: x.date.toDateString()
-        }
-      })
+app.get('/api/users/:_id/logs', async (req, res) => {
+  const { from, to, limit } = req.query;
+  console.log(limit)
 
-      res.json({
-        _id: userLog._id,
-        username: userLog.username,
-        count: Object.keys(userLog.log).length,
-        log: logs
-      })
+  if (!from && !to && !limit) {
+    Log.findById(req.params._id, (err, userLog) => {
+      if (!err) {
+        let logs = userLog.log.map(x => {
+          return {
+            description: x.description,
+            duration: x.duration,
+            date: x.date.toDateString()
+          }
+        })
+        res.json({
+          _id: userLog._id,
+          username: userLog.username,
+          count: Object.keys(userLog.log).length,
+          log: logs
+        })
+      }
+    })
+  } else {
+    const startDate = new Date(from);
+    const endDate = new Date(to);
+    let limitNumber = 10;
+    if (!isNaN(limit)) {
+      limitNumber = parseInt(limit);
     }
-  })
+    const _id = mongoose.Types.ObjectId(req.params._id)
+    const filter = {
+      _id: _id,
+    };
+    const resp = await Log.aggregate([
+      { $match: filter },
+      {
+        $project: {
+          _id: 1,
+          username: 1,
+          from: startDate.toDateString(),
+          count: {
+            $size: {
+              $filter: {
+                input: "$log",
+                as: "log",
+                cond: {
+                  $and: [
+                    { $gte: ["$$log.date", startDate] },
+                    { $lte: ["$$log.date", endDate] },
+                  ]
+                }
+              }
+            }
+          },
+          log: {
+            $filter: {
+              input: "$log",
+              as: "log",
+              cond: {
+                $and: [
+                  { $gte: ["$$log.date", startDate] },
+                  { $lte: ["$$log.date", endDate] },
+                ]
+              }
+            }
+          }
+        }
+      },
+      { $limit: limitNumber }
+    ])
+    res.json(resp)
+  }
 })
